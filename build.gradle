@@ -1,0 +1,39 @@
+buildscript {
+	ext {
+		springBootVersion = '1.4.0.RELEASE'
+	}
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'war'
+apply plugin: 'spring-boot'
+
+war {
+	baseName = 'doc_creator'
+	version = '0.0.1-SNAPSHOT'
+}
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+	mavenCentral()
+}
+
+
+dependencies {
+	compile('org.springframework.boot:spring-boot-starter-data-mongodb')
+	compile('org.springframework.boot:spring-boot-starter-web')
+	providedRuntime('javax.servlet:jstl')
+	compile 'org.apache.tomcat.embed:tomcat-embed-jasper:8.5.4'
+	testCompile('org.springframework.boot:spring-boot-starter-test')
+	compile group: 'joda-time', name: 'joda-time', version: '2.3'
+	compile('org.springframework.boot:spring-boot-starter-jersey')
+}
+
+
