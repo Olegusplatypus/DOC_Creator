@@ -6,6 +6,7 @@ import com.projects.service.utils.DocUtil;
 import com.projects.service.utils.MethodsUtil;
 import com.projects.shared.dto.ProjectDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 

@@ -1,17 +1,18 @@
 server:
   port: 54287
 
-
 spring:
   mvc:
     view:
       prefix: /WEB-INF/jsp/
       suffix: .jsp
-    static-path-pattern: /**     #alternative to class StaticResourceConfiguration
+
+
+    static-path-pattern: /static/**   #alternative to class StaticResourceConfiguration
   http:
     encoding:
        charset: UTF-8 # the encoding of HTTP requests/responses
        enabled: true # enable http encoding support
        force: true
   resources:
-    static-locations[0]: /public/  #alternative to class StaticResourceConfiguration
+    static-locations[0]: /public/static/  #alternative to class StaticResourceConfiguration
