@@ -8,6 +8,7 @@ spring:
       suffix: .jsp
 
 
+
     static-path-pattern: /static/**   #alternative to class StaticResourceConfiguration
   http:
     encoding:

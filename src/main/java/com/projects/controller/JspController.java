@@ -38,7 +38,6 @@ public class JspController {
         return "save";
     }
 
-
     @PostMapping("/add")
     public String addProject(ProjectRequest projectRequest) {
 

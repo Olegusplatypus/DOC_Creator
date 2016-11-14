@@ -1,6 +1,7 @@
 package com.projects.service.utils;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -11,10 +12,7 @@ import java.lang.reflect.ParameterizedType;
 import org.joda.time.DateTime;
 
 import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by Oleg Cherniak
@@ -24,7 +22,16 @@ import java.util.Map;
  */
 @Component
 public class DocUtil {
+
+    @Autowired
+    private ClassesUtil classesUtil;
+
+
+    private Set<String> packages;
+
     private List<Class> baseClasses;
+
+
 
     @PostConstruct
     public void init() {
@@ -40,6 +47,8 @@ public class DocUtil {
 
 
     public String docClass(String className, String path) throws ClassNotFoundException, InstantiationException, IllegalAccessException, MalformedURLException {
+
+        packages = classesUtil.getPackages();
 
         DocHelper docHelper = new DocHelper();
 
@@ -58,7 +67,7 @@ public class DocUtil {
         return result;
     }
 
-    public void documentClass(StringBuilder JSONBuilder, StringBuilder docBuilder, Class<?> aClass, int depth, DocHelper docHelper) throws IllegalAccessException, InstantiationException {
+    private void documentClass(StringBuilder JSONBuilder, StringBuilder docBuilder, Class<?> aClass, int depth, DocHelper docHelper) throws IllegalAccessException, InstantiationException {
 
         if (aClass == null) {
             return;
@@ -93,8 +102,12 @@ public class DocUtil {
                     } else if (Map.class.isAssignableFrom(type)) {
                         writeAsMap(JSONBuilder, docBuilder, name, depth1,docHelper);
                         // case if field is entity class
+                    } else if (type.isEnum()) {
+                        writeAsBaseObject(JSONBuilder, docBuilder, declaredField, name, type, depth1, docHelper);
+                    } else if (packages.contains(type.getPackage().toString().split(" ")[1])) {
+                        writeAsEntityObject(JSONBuilder, docBuilder, name, type, depth1, docHelper);
                     } else {
-                        writeAsEntityObject(JSONBuilder, docBuilder, name, type, depth1,docHelper);
+                        writeAsBaseObject(JSONBuilder, docBuilder, declaredField, name, type, depth1,docHelper);
                     }
                 }
                 docHelper.writeComa(declaredFields, declaredField, JSONBuilder, docBuilder);
@@ -105,24 +118,26 @@ public class DocUtil {
 
 
 
-    public void printDataWithCaret(StringBuilder JSONBuilder, StringBuilder docBuilder, String data, int depth,DocHelper docHelper) {
+    private void printDataWithCaret(StringBuilder JSONBuilder, StringBuilder docBuilder, String data, int depth,DocHelper docHelper) {
         JSONBuilder.append(docHelper.getOffsetByDepth(depth) + data + "\n");
         docBuilder.append("*" + docHelper.getOffsetByDepth(depth) + data + "\n");
     }
 
-    public void writeAsBaseObject(StringBuilder JSONBuilder, StringBuilder docBuilder, Field field, String name, Class<?> type, int depth,DocHelper docHelper) {
+    private void writeAsBaseObject(StringBuilder JSONBuilder, StringBuilder docBuilder, Field field, String name, Class<?> type, int depth,DocHelper docHelper) {
         String notNull = field.isAnnotationPresent(NotNull.class) ? " (NOT NULL)" : "";
-        printDataWithCaret(JSONBuilder, docBuilder, "\"" + name + "\":\"(" + type.getSimpleName() + ")" + notNull + "\"", depth, docHelper);
+        String simpleName = baseClasses.contains(type) ? type.getSimpleName() :"String" ;
+
+        printDataWithCaret(JSONBuilder, docBuilder, "\"" + name + "\":\"(" + simpleName + ")" + notNull + "\"", depth, docHelper);
     }
 
-    public void writeAsEntityObject(StringBuilder JSONBuilder, StringBuilder docBuilder, String name, Class<?> type, int depth, DocHelper docHelper) throws InstantiationException, IllegalAccessException {
+    private void writeAsEntityObject(StringBuilder JSONBuilder, StringBuilder docBuilder, String name, Class<?> type, int depth, DocHelper docHelper) throws InstantiationException, IllegalAccessException {
         printDataWithCaret(JSONBuilder, docBuilder, "\"" + name + "\":", depth,docHelper);
         int depth1 = depth + 4;
         depth1 = depth1 + name.length();
         documentClass(JSONBuilder, docBuilder, type, depth1,docHelper);
     }
 
-    public void writeAsCollection(StringBuilder JSONBuilder, StringBuilder docBuilder, String name, Field declaredField, int depth, DocHelper docHelper) throws InstantiationException, IllegalAccessException {
+    private void writeAsCollection(StringBuilder JSONBuilder, StringBuilder docBuilder, String name, Field declaredField, int depth, DocHelper docHelper) throws InstantiationException, IllegalAccessException {
         printDataWithCaret(JSONBuilder, docBuilder, "\"" + name + "\":[", depth,docHelper);
         int depth1 = depth + 4;
         depth1 = depth1 + name.length();
@@ -137,7 +152,7 @@ public class DocUtil {
         printDataWithCaret(JSONBuilder, docBuilder, "]", depth1 - 1,docHelper);
     }
 
-    public void writeAsMap(StringBuilder JSONBuilder, StringBuilder docBuilder, String name, int depth, DocHelper docHelper) throws InstantiationException, IllegalAccessException {
+    private void writeAsMap(StringBuilder JSONBuilder, StringBuilder docBuilder, String name, int depth, DocHelper docHelper) throws InstantiationException, IllegalAccessException {
         printDataWithCaret(JSONBuilder, docBuilder, "\"" + name + "\":", depth, docHelper);
         int depth1 = depth + 4;
         depth1 = depth1 + name.length();
